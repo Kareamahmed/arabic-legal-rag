@@ -1,6 +1,6 @@
-def main():
-    print("Hello from arabic-legal-rag!")
+from fastapi import FastAPI
+from routes.base import base_router
 
+app = FastAPI()
+app.include_router(base_router)
 
-if __name__ == "__main__":
-    main()
