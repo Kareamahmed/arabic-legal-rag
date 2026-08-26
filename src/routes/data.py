@@ -1,7 +1,7 @@
 from fastapi import APIRouter, status
 from fastapi.responses import JSONResponse
 from controller import ProcessController, BaseController
-from model.enums import ResponseEnums
+from models.enums import ResponseEnums
 
 data_router = APIRouter(prefix="/api/v1", tags=["api_v1"])
 
