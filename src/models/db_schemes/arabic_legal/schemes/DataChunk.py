@@ -1,14 +1,15 @@
 from .arabic_legal_base import SQLAlchemyBase
 from sqlalchemy import Column, Integer, String, func, DateTime
+from sqlalchemy.dialects.postgresql import JSONB
 from pydantic import BaseModel
 
 
-class DataChunk(SQLAlchemyBase):
+class   DataChunk(SQLAlchemyBase):
     __tablename__ = "chunks"
 
     chunk_id = Column(Integer, primary_key=True, autoincrement=True)
     chunk_text = Column(String, nullable=False)
-    chunk_metadata = Column(String, nullable=True)
+    chunk_metadata = Column(JSONB, nullable=True)
 
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
@@ -20,3 +21,5 @@ class RetrievedDocument(BaseModel):
     chunk_id: int
     chunk_text: str
     score: float
+
+
