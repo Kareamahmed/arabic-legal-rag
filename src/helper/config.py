@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     POSTGRES_PASSWORD: str
     POSTGRES_MAIN_DB: str
 
+    ## LLM
+    GEMINI: str
+    COHERE: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
