@@ -1,13 +1,24 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Request
 from fastapi.responses import JSONResponse
 from controller import ProcessController, BaseController
 from models.enums import ResponseEnums
+from .schemes import ProcessRequest
+from models.ChunkModel import ChunkModel
+from models.db_schemes.arabic_legal.schemes import DataChunk
 
 data_router = APIRouter(prefix="/api/v1", tags=["api_v1"])
 
 
-@data_router.get("/process/")
-async def process_data():
+@data_router.post("/process/")
+async def process_data(request: Request, process_request: ProcessRequest):
+    reset = process_request.do_reset
+    db_client = request.app.db_client
+
+    chunk_model = ChunkModel(db_client=db_client)
+
+    if reset == 1:
+        deleted_count = await chunk_model.delete_chunks()
+        return deleted_count
 
     process_controller = ProcessController()
 
@@ -28,10 +39,16 @@ async def process_data():
             status_code=status.HTTP_400_BAD_REQUEST,
             content={"message": ResponseEnums.PROCESSING_FAILED.value},
         )
+    rows = [
+        DataChunk(chunk_text=chunk.page_content, chunk_metadata=chunk.metadata)
+        for chunk in chunks
+    ]
+
+    inserted_rows = await chunk_model.insert_chunks(chunks=rows)
 
     return JSONResponse(
         content={
             "message": ResponseEnums.PROCESSING_SUCCESS.value,
-            "chunks": [chunk.model_dump() for chunk in chunks],
+            "inserted_rows": inserted_rows,
         }
     )
