@@ -56,6 +56,7 @@ class GeminiProvider(LLMInterface):
         interaction = self.client.interactions.create(
             model=self.generation_model_id,
             system_instruction=system_prompt,
+            input=chat_history,
             generation_config=types.GenerationConfig(
                 max_output_tokens=max_output_tokens,
                 temperature=temperature,
@@ -93,3 +94,5 @@ class GeminiProvider(LLMInterface):
 
     def construct_prompt(self, prompt, role):
         return {"role": role, "content": [{"type": "text", "text": prompt}]}
+
+
