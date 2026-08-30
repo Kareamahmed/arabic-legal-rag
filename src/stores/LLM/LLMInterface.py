@@ -16,6 +16,7 @@ class LLMInterface(ABC):
     def generate_text(
         self,
         prompt: str,
+        system_prompt: str = None,
         chat_history: list = None,
         max_output_tokens: int = None,
         temperature: float = None,
