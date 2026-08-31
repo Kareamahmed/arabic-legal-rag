@@ -2,10 +2,12 @@ from fastapi import FastAPI
 from routes.base import base_router
 from routes.data import data_router
 from helper.config import get_settings
+from stores.LLM.LLMProviderFactory import LLMProviderFactory
 
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -16,6 +18,21 @@ async def lifespan(app: FastAPI):
     app.postgres_engine = create_async_engine(postgres_conn)
     app.db_client = sessionmaker(
         app.postgres_engine, class_=AsyncSession, expire_on_commit=False
+    )
+
+    llm_provider_factory = LLMProviderFactory(settings=settings)
+    # generation client
+    app.generation_client = llm_provider_factory.create_provider(
+        name=settings.GENERATION_BACKEND
+    )
+    app.generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
+
+    # embedding client
+    app.embedding_client = llm_provider_factory.create_provider(
+        name=settings.EMBEDDING_BACKEND
+    )
+    app.embedding_client.set_embedding_model(
+        model_id=settings.EMBEDDING_MODEL_ID, embedding_size=settings.EMBEDDING_SIZE
     )
 
     yield
