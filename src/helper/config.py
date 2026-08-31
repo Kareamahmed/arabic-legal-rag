@@ -13,9 +13,21 @@ class Settings(BaseSettings):
     POSTGRES_MAIN_DB: str
 
     ## LLM
-    GEMINI: str
-    COHERE: str
+    GENERATION_BACKEND: str
+    EMBEDDING_BACKEND: str
 
+    GEMINI_APY_KEY: str
+    COHERE_API_KEY: str
+
+    GENERATION_MODEL_ID: str
+    EMBEDDING_MODEL_ID: str
+    EMBEDDING_SIZE: int
+
+    MAX_INPUT_TOKENS: int
+    MAX_OUTPUT_TOKENS: int
+    TEMPERATURE: float
+
+    
     model_config = SettingsConfigDict(env_file=".env")
 
 
