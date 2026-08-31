@@ -58,8 +58,7 @@ class GeminiProvider(LLMInterface):
             system_instruction=system_prompt,
             input=chat_history,
             generation_config=types.GenerationConfig(
-                max_output_tokens=max_output_tokens,
-                temperature=temperature,
+                max_output_tokens=max_output_tokens, temperature=temperature, top_p = 0.95
             ),
         )
 
@@ -94,5 +93,3 @@ class GeminiProvider(LLMInterface):
 
     def construct_prompt(self, prompt, role):
         return {"role": role, "content": [{"type": "text", "text": prompt}]}
-
-

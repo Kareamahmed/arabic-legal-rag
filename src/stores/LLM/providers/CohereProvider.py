@@ -57,6 +57,7 @@ class CohereProvider(LLMInterface):
             messages=chat_history,
             max_tokens=max_output_tokens,
             temperature=temperature,
+            p=0.95,
         )
         if (
             not response
