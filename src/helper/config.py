@@ -27,7 +27,11 @@ class Settings(BaseSettings):
     MAX_OUTPUT_TOKENS: int
     TEMPERATURE: float
 
-    
+    ## VectorDB config
+    VECTOR_DB_BACKEND: str
+    VECTOR_DISTANCE_METRIC: str
+    VECTOR_DB_PGVECT_INDEX_THRESHOLD: int
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
