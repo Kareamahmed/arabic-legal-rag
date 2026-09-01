@@ -9,10 +9,8 @@ from pathlib import Path
 
 import pdfplumber
 
-PDF_PATH = Path.cwd() / "file" / "egyptian_civil_code.pdf"
-OUTPUT_PATH = Path.cwd() / "data" / "corpus.json"
-if not PDF_PATH.exists():
-    PDF_PATH = Path("/home/workdir/artifacts/file/egyptian_civil_code.pdf")
+PDF_PATH = Path(__file__).parent / "file" / "egyptian_civil_code.pdf"
+OUTPUT_PATH = Path(__file__).parent  / "data" / "corpus.json"
 
 AR_RE = re.compile(r"[\u0600-\u06FF]")
 EN_RE = re.compile(r"[A-Za-z]")
