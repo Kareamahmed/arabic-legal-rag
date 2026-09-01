@@ -3,7 +3,7 @@ from routes.base import base_router
 from routes.data import data_router
 from helper.config import get_settings
 from stores.LLM.LLMProviderFactory import LLMProviderFactory
-
+from stores.vectordb.VectorDBFactory import VectorDBFactory
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
@@ -19,6 +19,12 @@ async def lifespan(app: FastAPI):
     app.db_client = sessionmaker(
         app.postgres_engine, class_=AsyncSession, expire_on_commit=False
     )
+    # vector DB
+    vector_db_factory = VectorDBFactory(db_client=app.db_client, settings=settings)
+    app.vector_db_client = vector_db_factory.create_provider(
+        name=settings.VECTOR_DB_BACKEND
+    )
+    await app.vector_db_client.connect()
 
     llm_provider_factory = LLMProviderFactory(settings=settings)
     # generation client
