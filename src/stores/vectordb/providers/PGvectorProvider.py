@@ -93,7 +93,7 @@ class PGvectorProvider(VectorDBInterface):
                             {chunk_id} INT,
                             {text} TEXT,
                             {vector} VECTOR({embed_size}),
-                            {tsv} TSVECTOR GENERATED ALWAYS AS (to_tsvector('simple', {self.text_search_config})) STORED,
+                            {tsv} TSVECTOR GENERATED ALWAYS AS (to_tsvector( '{self.text_search_config}' , {text} )) STORED,
                             foreign key ({chunk_id}) references chunks(chunk_id) on delete cascade
                         );
                         """)

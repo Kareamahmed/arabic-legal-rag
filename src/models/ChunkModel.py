@@ -17,7 +17,7 @@ class ChunkModel:
                     session.add_all(batch)
         return len(chunks)
 
-    async def get_chunks(self, page_no: int = 1, page_size: int = 100):
+    async def get_chunks(self, page_no: int = 1, page_size: int = 50):
         async with self.db_client() as session:
             query = select(DataChunk).offset((page_no - 1) * page_size).limit(page_size)
             result = await session.execute(query)
