@@ -44,12 +44,12 @@ class VectorDBInterface(ABC):
 
     @abstractmethod
     async def search_by_vector(
-        self, table_name: str, vector: list, limit: int
+        self, table_name: str, vector: list, limit: int = 5
     ) -> List[RetrievedDocument]:
         pass
 
     @abstractmethod
     async def search_by_keyword(
-        self, table_name: str, text: str, limit: int
+        self, table_name: str, text: str, limit: int = 5
     ) -> List[RetrievedDocument]:
         pass

@@ -146,7 +146,7 @@ class PGvectorProvider(VectorDBInterface):
                     await session.execute(sql, values)
         return True
 
-    async def search_by_vector(self, table_name, vector, limit):
+    async def search_by_vector(self, table_name, vector, limit: int = 5):
         is_table_existed = await self.is_table_exists(table_name=table_name)
         if not is_table_existed:
             self.logger.error(
@@ -179,11 +179,11 @@ class PGvectorProvider(VectorDBInterface):
         if not rows or len(rows) == 0:
             return None
         return [
-            RetrievedDocument(chunk_id=row[0], text=row[1], score=row[2])
+            RetrievedDocument(chunk_id=row[0], chunk_text=row[1], score=row[2])
             for row in rows
         ]
 
-    async def search_by_keyword(self, table_name, text, limit):
+    async def search_by_keyword(self, table_name, text, limit: int = 5):
         raise NotImplementedError
 
     async def disconnect(self):
