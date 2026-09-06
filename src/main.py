@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from routes.base import base_router
 from routes.data import data_router
+from routes.nlp import nlp_router
 from helper.config import get_settings
 from stores.LLM.LLMProviderFactory import LLMProviderFactory
 from stores.vectordb.VectorDBFactory import VectorDBFactory
@@ -50,3 +51,4 @@ app = FastAPI(lifespan=lifespan)
 
 app.include_router(base_router)
 app.include_router(data_router)
+app.include_router(nlp_router)
