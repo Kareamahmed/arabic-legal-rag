@@ -5,8 +5,10 @@ from models.enums import ResponseEnums
 from .schemes import ProcessRequest
 from models.ChunkModel import ChunkModel
 from models.db_schemes.arabic_legal.schemes import DataChunk
+import logging
 
 data_router = APIRouter(prefix="/api/v1", tags=["api_v1"])
+logger = logging.getLogger("uvicorn")
 
 
 @data_router.post("/process/")
