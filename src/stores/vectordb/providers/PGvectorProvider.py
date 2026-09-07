@@ -184,7 +184,40 @@ class PGvectorProvider(VectorDBInterface):
         ]
 
     async def search_by_keyword(self, table_name, text, limit: int = 5):
-        raise NotImplementedError
+        is_table_existed = await self.is_table_exists(table_name=table_name)
+        if not is_table_existed:
+            self.logger.error(
+                f"cannot search in table {table_name} because it does not exist."
+            )
+            return False
+
+        async with self.db_client() as session:
+            async with session.begin():
+                safe_table_name = table_name.replace('"', '""')
+                text_col = PgvectorTableSchemaEnums.TEXT.value
+                tsv_col = PgvectorTableSchemaEnums.TSV.value
+                chunk_id_col = PgvectorTableSchemaEnums.CHUNK_ID.value
+
+                sql = sql_text(f"""
+                    SELECT {chunk_id_col},{text_col}, ts_rank_cd({tsv_col}, to_tsquery('{self.text_search_config}', :query)) AS score
+                    FROM "{safe_table_name}"
+                    WHERE {tsv_col} @@ to_tsquery('{self.text_search_config}', :query)
+                    ORDER BY score DESC
+                    LIMIT :limit;
+                    """)
+                normalized_words = text.strip().split()
+                tsquery_str = " | ".join(normalized_words)
+                result = await session.execute(
+                    sql, {"query": tsquery_str, "limit": limit}
+                )
+                rows = result.fetchall()
+
+        if not rows or len(rows) == 0:
+            return None
+        return [
+            RetrievedDocument(chunk_id=row[0], chunk_text=row[1], score=row[2])
+            for row in rows
+        ]
 
     async def disconnect(self):
         pass
