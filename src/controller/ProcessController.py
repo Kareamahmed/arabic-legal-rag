@@ -14,7 +14,7 @@ class ProcessController:
 
         documents = [
             Document(
-                page_content=f"المادة {article.get('article_number')}: {article.get('text_ar', '').strip()}",
+                page_content=f"المادة {article.get('article_number')} : {article.get('text_ar', '').strip()}",
                 metadata={
                     k: v for k, v in article.items() if k not in ("text_ar", "text_en")
                 },

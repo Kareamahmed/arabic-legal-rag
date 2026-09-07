@@ -125,3 +125,63 @@ async def search(request: Request, search_request: SearchRequest):
             "retrieved_docs": [doc.model_dump() for doc in retrieved_docs],
         }
     )
+
+
+@nlp_router.post("/index/search/keyword")
+async def search_by_keyword(request: Request, search_request: SearchRequest):
+    text = search_request.text
+    limit = search_request.limit
+
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+    )
+
+    retrieved_docs = await nlp_controller.search_into_vector_db_by_keyword(
+        text=text, limit=limit
+    )
+    if not retrieved_docs:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_FAILED.value,
+            },
+        )
+
+    return JSONResponse(
+        content={
+            "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_SUCCESS.value,
+            "retrieved_docs": [doc.model_dump() for doc in retrieved_docs],
+        }
+    )
+
+    ## hybrid search
+
+
+@nlp_router.post("/index/search/hybrid")
+async def search_index_hybrid(request: Request, search_request: SearchRequest):
+
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+    )
+    text = search_request.text
+    limit = search_request.limit
+
+    results = await nlp_controller.hybrid_search_vector_db(text=text, limit=limit)
+
+    if not results:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_FAILED.value,
+            },
+        )
+    return JSONResponse(
+        content={
+            "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_SUCCESS.value,
+            "retrieved_chunks": [result.model_dump() for result in results],
+        },
+    )
