@@ -13,7 +13,7 @@ class LLMInterface(ABC):
         pass
 
     @abstractmethod
-    def generate_text(
+    async def generate_text(
         self,
         prompt: str,
         system_prompt: str = None,
@@ -24,5 +24,5 @@ class LLMInterface(ABC):
         pass
 
     @abstractmethod
-    def embedding_text(self, text: Union[str, List[str]], document_type: str = None):
+    async def embedding_text(self, text: Union[str, List[str]], document_type: str = None):
         pass

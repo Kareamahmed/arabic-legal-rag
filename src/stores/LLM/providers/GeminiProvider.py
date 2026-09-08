@@ -33,7 +33,7 @@ class GeminiProvider(LLMInterface):
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
-    def generate_text(
+    async def generate_text(
         self,
         prompt: str,
         system_prompt: str = None,
@@ -53,12 +53,12 @@ class GeminiProvider(LLMInterface):
 
         chat_history.append(self.construct_prompt(prompt, role=GeminiEnums.USER.value))
 
-        interaction = self.client.interactions.create(
+        interaction = await self.client.aio.interactions.create(
             model=self.generation_model_id,
             system_instruction=system_prompt,
             input=chat_history,
-            generation_config=types.GenerationConfig(
-                max_output_tokens=max_output_tokens, temperature=temperature, top_p = 0.95
+            generation_config=types.GenerationConfigDict(
+                max_output_tokens=max_output_tokens, temperature=temperature, top_p=0.95
             ),
         )
 
@@ -71,7 +71,7 @@ class GeminiProvider(LLMInterface):
 
         return interaction.output_text
 
-    def embedding_text(self, text, document_type=None):
+    async def embedding_text(self, text, document_type=None):
         if not self.embedding_model_id or not self.embedding_size:
             self.logger.error("Embedding model ID or size is not set.")
             return None
@@ -79,7 +79,7 @@ class GeminiProvider(LLMInterface):
         if isinstance(text, str):
             text = [text]
 
-        result = self.client.models.embed_content(
+        result = await self.client.aio.models.embed_content(
             model=self.embedding_model_id,
             contents=text,
             config=types.EmbedContentConfig(output_dimensionality=self.embedding_size),
@@ -92,4 +92,4 @@ class GeminiProvider(LLMInterface):
         return embeddings
 
     def construct_prompt(self, prompt, role):
-        return {"role": role, "content": [{"type": "text", "text": prompt}]}
+        return {"type": role, "content": [{"type": "text", "text": prompt}]}

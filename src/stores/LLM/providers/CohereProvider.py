@@ -22,7 +22,7 @@ class CohereProvider(LLMInterface):
         self.embedding_model_id = None
         self.embedding_size = None
 
-        self.client = cohere.ClientV2(api_key=self.api_key)
+        self.client = cohere.AsyncClientV2(api_key=self.api_key)
         self.logger = logging.getLogger("uvicorn")
 
     def set_generation_model(self, model_id):
@@ -32,7 +32,7 @@ class CohereProvider(LLMInterface):
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
-    def generate_text(
+    async def generate_text(
         self,
         prompt,
         system_prompt=None,
@@ -52,7 +52,7 @@ class CohereProvider(LLMInterface):
 
         chat_history.append(self.construct_prompt(prompt, role=CoHereEnums.USER.value))
 
-        response = self.client.chat(
+        response = await self.client.chat(
             model=self.generation_model_id,
             messages=chat_history,
             max_tokens=max_output_tokens,
@@ -72,7 +72,7 @@ class CohereProvider(LLMInterface):
 
         return generated_text
 
-    def embedding_text(self, text, document_type=None):
+    async def embedding_text(self, text, document_type=None):
         if not self.embedding_model_id or not self.embedding_size:
             self.logger.error("Embedding model ID or size is not set.")
             return None
@@ -84,7 +84,7 @@ class CohereProvider(LLMInterface):
         if isinstance(text, str):
             text = [text]
 
-        response = self.client.embed(
+        response = await self.client.embed(
             model=self.embedding_model_id,
             texts=text,
             input_type=input_type,
