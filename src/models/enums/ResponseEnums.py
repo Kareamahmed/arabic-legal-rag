@@ -10,3 +10,5 @@ class ResponseEnums(Enum):
     GET_VECTOR_DB_INFO_FAILED = "get_vector_db_info_failed"
     SEARCH_INTO_VECTOR_DB_FAILED = "search_into_vector_db_failed"
     SEARCH_INTO_VECTOR_DB_SUCCESS = "search_into_vector_db_success"
+    RAG_ANSWER_FAILED = "rag_answer_failed"
+    RAG_ANSWER_SUCCESS = "rag_answer_success"
