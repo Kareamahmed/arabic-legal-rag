@@ -23,6 +23,8 @@ async def index_data(request: Request, push_request: PushRequest):
         vector_db_client=vector_db_client,
         generation_client=generation_client,
         embedding_client=embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
     )
 
     chunk_model = ChunkModel(db_client=request.app.db_client)
@@ -74,6 +76,8 @@ async def index_info(request: Request):
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
         embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
     )
 
     index_info = await nlp_controller.get_vector_db_info()
@@ -96,7 +100,7 @@ async def index_info(request: Request):
 @nlp_router.post("/index/search")
 async def search(request: Request, search_request: SearchRequest):
     text = search_request.text
-    limit = search_request.limit
+    top_n = search_request.top_n
 
     vector_db_client = request.app.vector_db_client
     generation_client = request.app.generation_client
@@ -106,10 +110,12 @@ async def search(request: Request, search_request: SearchRequest):
         vector_db_client=vector_db_client,
         generation_client=generation_client,
         embedding_client=embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
     )
 
     retrieved_docs = await nlp_controller.search_into_vector_db_by_vector(
-        text=text, limit=limit
+        text=text, limit=top_n
     )
     if not retrieved_docs:
         return JSONResponse(
@@ -130,16 +136,18 @@ async def search(request: Request, search_request: SearchRequest):
 @nlp_router.post("/index/search/keyword")
 async def search_by_keyword(request: Request, search_request: SearchRequest):
     text = search_request.text
-    limit = search_request.limit
+    top_n = search_request.top_n
 
     nlp_controller = NLPController(
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
         embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
     )
 
     retrieved_docs = await nlp_controller.search_into_vector_db_by_keyword(
-        text=text, limit=limit
+        text=text, limit=top_n
     )
     if not retrieved_docs:
         return JSONResponse(
@@ -166,11 +174,17 @@ async def search_index_hybrid(request: Request, search_request: SearchRequest):
         vector_db_client=request.app.vector_db_client,
         generation_client=request.app.generation_client,
         embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
     )
     text = search_request.text
-    limit = search_request.limit
+    top_n = search_request.top_n
+    vector_limit = search_request.vector_limit
+    keyword_limit = search_request.keyword_limit
 
-    results = await nlp_controller.hybrid_search_vector_db(text=text, limit=limit)
+    results = await nlp_controller.hybrid_search_vector_db(
+        text=text, limit=top_n, vector_limit=vector_limit, keyword_limit=keyword_limit
+    )
 
     if not results:
         return JSONResponse(
@@ -183,5 +197,81 @@ async def search_index_hybrid(request: Request, search_request: SearchRequest):
         content={
             "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_SUCCESS.value,
             "retrieved_chunks": [result.model_dump() for result in results],
+        },
+    )
+
+
+@nlp_router.post("/index/ask")
+async def ask(request: Request, search_request: SearchRequest):
+
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
+    )
+
+    answer, full_prompt = await nlp_controller.answer_rag_question(
+        query=search_request.text,
+        vector_limit=search_request.vector_limit,
+        keyword_limit=search_request.keyword_limit,
+        rerank_candidates=search_request.rerank_candidates,
+        top_n=search_request.top_n,
+    )
+
+    if not answer:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": ResponseEnums.RAG_ANSWER_FAILED.value,
+            },
+        )
+
+    return JSONResponse(
+        content={
+            "message": ResponseEnums.RAG_ANSWER_SUCCESS.value,
+            "answer": answer,
+            "full_prompt": full_prompt,
+        },
+    )
+
+
+@nlp_router.post("/index/rerank")
+async def rerank_search_results(request: Request, search_request: SearchRequest):
+
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
+    )
+
+    docs = await nlp_controller.hybrid_search_vector_db(
+        text=search_request.text,
+        limit=search_request.rerank_candidates,
+        vector_limit=search_request.vector_limit,
+        keyword_limit=search_request.keyword_limit,
+    )
+
+    result = await nlp_controller.rerank_search_results(
+        query=search_request.text,
+        documents=docs,
+        top_n=search_request.top_n,
+    )
+
+    if not result:
+        return JSONResponse(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            content={
+                "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_FAILED.value,
+            },
+        )
+
+    return JSONResponse(
+        content={
+            "message": ResponseEnums.SEARCH_INTO_VECTOR_DB_SUCCESS.value,
+            "retrieved_chunks": [result.model_dump() for result in result],
         },
     )
