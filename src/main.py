@@ -4,6 +4,8 @@ from routes.data import data_router
 from routes.nlp import nlp_router
 from helper.config import get_settings
 from stores.LLM.LLMProviderFactory import LLMProviderFactory
+from stores.LLM.templates.template_parser import TemplateParser
+from stores.rerank.RerankerProviderFactory import RerankerProviderFactory
 from stores.vectordb.VectorDBFactory import VectorDBFactory
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -40,6 +42,16 @@ async def lifespan(app: FastAPI):
     )
     app.embedding_client.set_embedding_model(
         model_id=settings.EMBEDDING_MODEL_ID, embedding_size=settings.EMBEDDING_SIZE
+    )
+    # template
+    app.template_parser = TemplateParser(
+        language=settings.PRIMARY_LANG, default_language=settings.DEFAULT_LANG
+    )
+
+    # reranker
+    reranker_provider = RerankerProviderFactory(settings=settings)
+    app.reranker_client = reranker_provider.create_provider(
+        name = settings.RERANKER_BACKEND
     )
 
     yield

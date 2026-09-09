@@ -32,6 +32,14 @@ class Settings(BaseSettings):
     VECTOR_DISTANCE_METRIC: str
     VECTOR_DB_PGVECT_INDEX_THRESHOLD: int
 
+    ## template config
+    PRIMARY_LANG: str
+    DEFAULT_LANG: str
+
+    
+    RERANKER_BACKEND: str
+    RERANKER_MODEL_NAME: str
+
     model_config = SettingsConfigDict(env_file=".env")
 
 
