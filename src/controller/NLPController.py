@@ -11,11 +11,15 @@ class NLPController(BaseController):
         vector_db_client: PGvectorProvider,
         generation_client,
         embedding_client: CohereProvider,
+        template_parser,
+        reranker_client,
     ):
         super().__init__()
         self.vector_db_client = vector_db_client
         self.generation_client = generation_client
         self.embedding_client = embedding_client
+        self.template_parser = template_parser
+        self.reranker_client = reranker_client
 
         self.table_name = f"vector_db_{self.app_setting.EMBEDDING_SIZE}".strip()
 
@@ -37,7 +41,7 @@ class NLPController(BaseController):
         # mange chunks
         texts = [chunk.chunk_text for chunk in chunks]
         chunk_ids = [chunk.chunk_id for chunk in chunks]
-        vectors = self.embedding_client.embedding_text(
+        vectors = await self.embedding_client.embedding_text(
             texts, document_type=DocumentTypeEnums.DOCUMENT.value
         )
 
@@ -51,7 +55,7 @@ class NLPController(BaseController):
 
     async def search_into_vector_db_by_vector(self, text, limit: int = 5):
         # embedding text
-        vectors = self.embedding_client.embedding_text(
+        vectors = await self.embedding_client.embedding_text(
             text=text, document_type=DocumentTypeEnums.QUERY.value
         )
 
@@ -128,3 +132,62 @@ class NLPController(BaseController):
             for cid in sorted_chunk_ids[:limit]
         ]
         return final_results
+
+    async def rerank_search_results(self, query: str, documents, top_n: int = 5):
+        if not self.reranker_client or not documents:
+            return documents
+        return await self.reranker_client.rerank(
+            query=query, documents=documents, top_n=top_n
+        )
+
+    async def answer_rag_question(
+        self,
+        query: str,
+        vector_limit: int = 20,
+        keyword_limit: int = 20,
+        rerank_candidates: int = 10,
+        top_n: int = 5,
+    ):
+        # hybrid search
+        retrieved_documents = await self.hybrid_search_vector_db(
+            text=query,
+            limit=rerank_candidates,
+            vector_limit=vector_limit,
+            keyword_limit=keyword_limit,
+        )
+        if not retrieved_documents or len(retrieved_documents) == 0:
+            return None
+
+        # cross encoder
+        retrieved_documents = await self.rerank_search_results(
+            query=query, documents=retrieved_documents, top_n=top_n
+        )
+        if not retrieved_documents:
+            return None
+
+        # construct llm prompt
+        system_prompt = self.template_parser.get("rag", "system_prompt")
+
+        document_prompt = "\n".join(
+            [
+                self.template_parser.get(
+                    "rag",
+                    "document_prompt",
+                    {
+                        "doc_num": i + 1,
+                        "chunk_text": doc.chunk_text,
+                    },
+                )
+                for i, doc in enumerate(retrieved_documents)
+            ]
+        )
+        footer_prompt = self.template_parser.get(
+            "rag", "footer_prompt", {"query": query}
+        )
+
+        full_prompt = "\n\n".join([document_prompt, footer_prompt])
+
+        answer = await self.generation_client.generate_text(
+            prompt=full_prompt, system_prompt=system_prompt
+        )
+        return answer, full_prompt
