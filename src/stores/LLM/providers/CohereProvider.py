@@ -68,7 +68,18 @@ class CohereProvider(LLMInterface):
             self.logger.error("Error while generating text with CoHere")
             return None
 
-        generated_text = response.message.content[0].text
+        generated_text = None
+        for item in response.message.content:
+            # Cohere SDK content items expose a `.type` field ("text", "thinking", etc.)
+            if getattr(item, "type", None) == "text":
+                generated_text = item.text
+                break
+
+        if generated_text is None:
+            self.logger.error(
+                "No text content returned from CoHere (only thinking/other blocks)."
+            )
+            return None
 
         return generated_text
 
