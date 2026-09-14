@@ -199,16 +199,16 @@ class PGvectorProvider(VectorDBInterface):
                 chunk_id_col = PgvectorTableSchemaEnums.CHUNK_ID.value
 
                 sql = sql_text(f"""
-                    SELECT {chunk_id_col},{text_col}, ts_rank_cd({tsv_col}, to_tsquery('{self.text_search_config}', :query)) AS score
+                    SELECT {chunk_id_col},{text_col}, ts_rank_cd({tsv_col}, websearch_to_tsquery('{self.text_search_config}', :query)) AS score
                     FROM "{safe_table_name}"
-                    WHERE {tsv_col} @@ to_tsquery('{self.text_search_config}', :query)
+                    WHERE {tsv_col} @@ websearch_to_tsquery('{self.text_search_config}', :query)
                     ORDER BY score DESC
                     LIMIT :limit;
                     """)
-                normalized_words = text.strip().split()
-                tsquery_str = " | ".join(normalized_words)
+                words = text.strip().split()
+                query_text = " OR ".join(words)
                 result = await session.execute(
-                    sql, {"query": tsquery_str, "limit": limit}
+                    sql, {"query": query_text, "limit": limit}
                 )
                 rows = result.fetchall()
 
