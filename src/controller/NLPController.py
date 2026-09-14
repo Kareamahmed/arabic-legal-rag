@@ -187,7 +187,9 @@ class NLPController(BaseController):
 
         full_prompt = "\n\n".join([document_prompt, footer_prompt])
 
+        contexts = [doc.chunk_text for doc in retrieved_documents]
+
         answer = await self.generation_client.generate_text(
             prompt=full_prompt, system_prompt=system_prompt
         )
-        return answer, full_prompt
+        return answer, full_prompt, contexts
