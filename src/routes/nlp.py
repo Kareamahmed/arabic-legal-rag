@@ -98,9 +98,9 @@ async def index_info(request: Request):
 
 
 @nlp_router.post("/index/search")
-async def search(request: Request, search_request: SearchRequest):
+async def search_by_vector(request: Request, search_request: SearchRequest):
     text = search_request.text
-    top_n = search_request.top_n
+    vector_limit = search_request.vector_limit
 
     vector_db_client = request.app.vector_db_client
     generation_client = request.app.generation_client
@@ -115,7 +115,7 @@ async def search(request: Request, search_request: SearchRequest):
     )
 
     retrieved_docs = await nlp_controller.search_into_vector_db_by_vector(
-        text=text, limit=top_n
+        text=text, limit=vector_limit
     )
     if not retrieved_docs:
         return JSONResponse(
@@ -136,7 +136,7 @@ async def search(request: Request, search_request: SearchRequest):
 @nlp_router.post("/index/search/keyword")
 async def search_by_keyword(request: Request, search_request: SearchRequest):
     text = search_request.text
-    top_n = search_request.top_n
+    keyword_limit = search_request.keyword_limit
 
     nlp_controller = NLPController(
         vector_db_client=request.app.vector_db_client,
@@ -147,7 +147,7 @@ async def search_by_keyword(request: Request, search_request: SearchRequest):
     )
 
     retrieved_docs = await nlp_controller.search_into_vector_db_by_keyword(
-        text=text, limit=top_n
+        text=text, limit=keyword_limit
     )
     if not retrieved_docs:
         return JSONResponse(
@@ -178,12 +178,12 @@ async def search_index_hybrid(request: Request, search_request: SearchRequest):
         reranker_client=request.app.reranker_client,
     )
     text = search_request.text
-    top_n = search_request.top_n
+    limit = search_request.rerank_candidates
     vector_limit = search_request.vector_limit
     keyword_limit = search_request.keyword_limit
 
     results = await nlp_controller.hybrid_search_vector_db(
-        text=text, limit=top_n, vector_limit=vector_limit, keyword_limit=keyword_limit
+        text=text, limit=limit, vector_limit=vector_limit, keyword_limit=keyword_limit
     )
 
     if not results:
@@ -212,7 +212,7 @@ async def ask(request: Request, search_request: SearchRequest):
         reranker_client=request.app.reranker_client,
     )
 
-    answer, full_prompt = await nlp_controller.answer_rag_question(
+    answer, full_prompt, contexts = await nlp_controller.answer_rag_question(
         query=search_request.text,
         vector_limit=search_request.vector_limit,
         keyword_limit=search_request.keyword_limit,
@@ -233,6 +233,7 @@ async def ask(request: Request, search_request: SearchRequest):
             "message": ResponseEnums.RAG_ANSWER_SUCCESS.value,
             "answer": answer,
             "full_prompt": full_prompt,
+            "contexts": contexts,
         },
     )
 
