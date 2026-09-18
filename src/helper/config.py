@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     GENERATION_BACKEND: str
     EMBEDDING_BACKEND: str
 
-    GEMINI_APY_KEY: str
+    GEMINI_API_KEY: str
     COHERE_API_KEY: str
 
     GENERATION_MODEL_ID: str
@@ -36,9 +36,11 @@ class Settings(BaseSettings):
     PRIMARY_LANG: str
     DEFAULT_LANG: str
 
-    
     RERANKER_BACKEND: str
     RERANKER_MODEL_NAME: str
+
+    RAGAS_JUDGE_MODEL_ID: str
+    GROQ_API_KEY: str
 
     model_config = SettingsConfigDict(env_file=".env")
 
