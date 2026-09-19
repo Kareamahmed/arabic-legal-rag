@@ -177,10 +177,8 @@ dependencies = [
     { name = "fastapi" },
     { name = "google-genai" },
     { name = "langchain" },
-    { name = "langchain-cohere" },
-    { name = "langchain-community" },
     { name = "langchain-google-genai" },
-    { name = "langchain-openai" },
+    { name = "langchain-groq" },
     { name = "pdfplumber" },
     { name = "psycopg2" },
     { name = "pydantic-settings" },
@@ -200,10 +198,8 @@ requires-dist = [
     { name = "fastapi", specifier = ">=0.141.1" },
     { name = "google-genai", specifier = ">=2.20.0" },
     { name = "langchain", specifier = ">=1.3.16" },
-    { name = "langchain-cohere", specifier = ">=0.6.0" },
-    { name = "langchain-community", specifier = ">=0.4,<0.4.2" },
     { name = "langchain-google-genai", specifier = ">=4.4.0" },
-    { name = "langchain-openai", specifier = ">=1.6.0" },
+    { name = "langchain-groq", specifier = ">=1.1.3" },
     { name = "pdfplumber", specifier = ">=0.11.10" },
     { name = "psycopg2", specifier = ">=2.9.12" },
     { name = "pydantic-settings", specifier = ">=2.15.0" },
@@ -856,6 +852,23 @@ wheels = [
 ]
 
 [[package]]
+name = "groq"
+version = "0.37.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e9/78/18948a9056e1509c87e10ab8316a90ecce87035fbd53342dffdf97f4de00/groq-0.37.1.tar.gz", hash = "sha256:7353d6dfb60834fd7aacbb86af106e2dc2aeaff6d0edd65fb2fd0f16bd39314c", size = 145289, upload-time = "2025-12-04T18:08:07.118Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5f/d6/645a081750e43f858b7d09dce5d8e1e76cf11e7e4bdba81252e04f78963d/groq-0.37.1-py3-none-any.whl", hash = "sha256:b49f8c8898c55eaec9f71f1342f3fcacc9560d67a08ce5f35fbfb84e8dacd3da", size = 137494, upload-time = "2025-12-04T18:08:05.801Z" },
+]
+
+[[package]]
 name = "h11"
 version = "0.16.0"
 source = { registry = "https://pypi.org/simple" }
@@ -1138,21 +1151,6 @@ wheels = [
 ]
 
 [[package]]
-name = "langchain-cohere"
-version = "0.6.0"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "cohere" },
-    { name = "langchain-core" },
-    { name = "pydantic" },
-    { name = "types-pyyaml" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5a/11/de374cbd215d49185c5f70228528887da5253f681291adaad9b86ef52522/langchain_cohere-0.6.0.tar.gz", hash = "sha256:5e45b56d0a5cc6f3de9f61bcd4fd449b9f3ece85e6b569c3d7c304992808bb0c", size = 39408, upload-time = "2026-06-01T15:55:41.954Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/5e/90f88e0316411fedf2dfdb7c5d53b106ac0186b2e432b93980acdf2ee250/langchain_cohere-0.6.0-py3-none-any.whl", hash = "sha256:524bc2f390b96a0b1bb98ec6e97f209fe7cd1654e6608e6e89db2e78b6c75838", size = 45108, upload-time = "2026-06-01T15:55:41.037Z" },
-]
-
-[[package]]
 name = "langchain-community"
 version = "0.4.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1209,6 +1207,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/cf/4e/41798c80b574d958d189e049f13d64eb9246a66623465290f2cbfd641759/langchain_google_genai-4.4.0.tar.gz", hash = "sha256:7871beec56ac07b719f77c46997845db6ff2267b817bffb0f97877053b0895d7", size = 378415, upload-time = "2026-09-01T20:15:45.816Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/10/83bb535e78c2cf767a6193c2f3b00b2894c1581a36ef85911ebaa3b9a891/langchain_google_genai-4.4.0-py3-none-any.whl", hash = "sha256:8e23a1307bd2158590bbf9d99f1d658fc84a9d9ddb77fb1b372f8875a2bafbbf", size = 81617, upload-time = "2026-09-01T20:15:44.533Z" },
+]
+
+[[package]]
+name = "langchain-groq"
+version = "1.1.3"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "groq" },
+    { name = "langchain-core" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/6e/4d/64b5e57e9e43f009fcb1591f567f0095bcf38f0b705a2d63cec4c04e0d56/langchain_groq-1.1.3.tar.gz", hash = "sha256:890c099a55526bceafc3e696d123cb9d36464c6664a3ead34ae6e09e0d50caeb", size = 192228, upload-time = "2026-06-10T04:16:08.009Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a7/5d/2f862bf5623d5c8ca6ed8a8917a7b1410e6d3595ee0bac12aff508556f76/langchain_groq-1.1.3-py3-none-any.whl", hash = "sha256:a69bb8212b7a699f407c033bf41ca526db8de68f438d51a41740a72bf6dc09bf", size = 20779, upload-time = "2026-06-10T04:16:06.754Z" },
 ]
 
 [[package]]
@@ -2604,15 +2615,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/16/f7/57713ba479fd405eb76de31404b2c744c289e336b2d999511ebf51e496f7/typer-0.27.2.tar.gz", hash = "sha256:269b7eb9d3c202ca84b4bc9618cb04ebb43d3d4d1e567e4c768607232c05f945", size = 204045, upload-time = "2026-08-28T10:26:55.046Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/dc/bf/205d0004930ede8f542fb58f601526fccf4ae7626075ca1e6c4de5d3d652/typer-0.27.2-py3-none-any.whl", hash = "sha256:b3a5fc4342d5fc8fda8fc3010b1cf117e9249aab7fae800c2eff62fd3842d97d", size = 123130, upload-time = "2026-08-28T10:26:53.752Z" },
-]
-
-[[package]]
-name = "types-pyyaml"
-version = "6.0.12.20260906"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/90/6e/abec85b9013db5b934b0280a6dd104904d84f7bcbaab2e2f3def87ac7463/types_pyyaml-6.0.12.20260906.tar.gz", hash = "sha256:f59c1cc05010b833d2d72287bbaa72610106b28d42d89a907313117faba85212", size = 18649, upload-time = "2026-09-06T06:35:35.362Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/15/c0/fc0644b7ddcfb969e95845837143cb5173ddd6e06ee4ba5fc493cd9329b7/types_pyyaml-6.0.12.20260906-py3-none-any.whl", hash = "sha256:bca893ff0d51df5c9053137d5d0e6ccd36e939a196356f1d5c16372422f5137b", size = 21282, upload-time = "2026-09-06T06:35:34.372Z" },
 ]
 
 [[package]]
