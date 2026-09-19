@@ -10,7 +10,7 @@ class LLMProviderFactory:
     def create_provider(self, name: str):
         if name == LLMEnums.GEMINI.value:
             return GeminiProvider(
-                api_key=self.settings.GEMINI_APY_KEY,
+                api_key=self.settings.GEMINI_API_KEY,
                 max_input_tokens=self.settings.MAX_INPUT_TOKENS,
                 max_output_tokens=self.settings.MAX_OUTPUT_TOKENS,
                 temperature=self.settings.TEMPERATURE,

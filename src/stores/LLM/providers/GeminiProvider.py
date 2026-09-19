@@ -88,7 +88,7 @@ class GeminiProvider(LLMInterface):
             self.logger.error("Error while generating embeddings with Gemini")
             return None
 
-        embeddings = [embedding.vector for embedding in result.embeddings]
+        embeddings = [embedding.values for embedding in result.embeddings]
         return embeddings
 
     def construct_prompt(self, prompt, role):
