@@ -8,11 +8,10 @@ def main():
     results_path = Path(__file__).parent / "assets" / "eval" / "rag_results.json"
     dataset = ragas_controller.load_rag_results(results_path)
 
-    result = ragas_controller.run_evaluation(dataset)
+    result = ragas_controller.run_evaluation_in_batches(dataset)
 
-    df = result.to_pandas()
     output_path = Path(__file__).parent / "assets" / "eval" / "ragas_report.csv"
-    df.to_csv(output_path, index=False, encoding="utf-8-sig")
+    result.to_csv(output_path, index=False, encoding="utf-8-sig")
 
     print(result)
     print(f"\nSaved detailed report to {output_path}")
@@ -20,3 +19,12 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+# from pathlib import Path
+# import pandas as pd
+
+# output_path = Path(__file__).parent / "assets" / "eval" / "ragas_report.csv"
+
+# df =  pd.read_csv(output_path, encoding="utf-8-sig")
+# avg_faithfulness = (df["faithfulness"].sum() / len(df)).round(4)
+# print(f"Average Faithfulness: {avg_faithfulness}")
