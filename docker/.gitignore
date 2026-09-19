@@ -1,1 +1,3 @@
-.env
+env/.env*
+!env/.env.example.*
+arabic_legal/alembic.ini

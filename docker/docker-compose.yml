@@ -1,21 +1,46 @@
 services:
+
+  # FastAPI Application
+  fastapi:
+    build:
+      context: ..
+      dockerfile: docker/arabic_legal/Dockerfile
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./env/.env.app
+    volumes:
+      - fastapi_data:/app/assets/data
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      pgvector:
+        condition: service_healthy
+
   pgvector:
     image: pgvector/pgvector:0.8.6-pg18-trixie
     container_name: pgvector
     ports:
       - "5432:5432"
-    environment:
-      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      - POSTGRES_USER=${POSTGRES_USER}
-      - POSTGRES_DB=${POSTGRES_DB}
     volumes:
       - pgvector_data:/var/lib/postgresql
+    env_file:
+      - ./env/.env.postgres
     restart: always
     networks:
       - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U arabic-legal" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
 volumes:
   pgvector_data:
+  fastapi_data:
 
 networks:
   backend:
