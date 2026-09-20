@@ -38,6 +38,20 @@ services:
       retries: 5
       start_period: 20s
 
+    # Prometheus PostgreSQL exporter for postgres metrics
+  postgres_exporter:
+    image: prometheuscommunity/postgres-exporter:latest
+    container_name: postgres_exporter
+    ports:
+      - "9187:9187"
+    env_file:
+      - ./env/.env.postgres-exporter
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      - pgvector
+
 volumes:
   pgvector_data:
   fastapi_data:
