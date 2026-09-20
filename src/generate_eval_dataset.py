@@ -12,7 +12,7 @@ async def main():
 
     llm_provider_factory = LLMProviderFactory(settings=settings)
     generation_client = llm_provider_factory.create_provider(
-        name=settings.EMBEDDING_BACKEND
+        name=settings.GENERATION_BACKEND
     )
     generation_client.set_generation_model(model_id=settings.GENERATION_MODEL_ID)
 
