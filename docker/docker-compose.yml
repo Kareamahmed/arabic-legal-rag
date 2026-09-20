@@ -37,7 +37,6 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
-
     # Prometheus PostgreSQL exporter for postgres metrics
   postgres_exporter:
     image: prometheuscommunity/postgres-exporter:latest
@@ -51,6 +50,24 @@ services:
     restart: always
     depends_on:
       - pgvector
+
+
+    # Prometheus 
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - prometheus_data:/prometheus
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml # override default config
+    networks:
+      - backend
+    restart: always
+    command:
+      - "--web.enable-lifecycle" # enable reload endpoint
+
+  
 
 volumes:
   pgvector_data:
