@@ -86,6 +86,8 @@ services:
 volumes:
   pgvector_data:
   fastapi_data:
+  prometheus_data:
+  grafana_data:
 
 networks:
   backend:
