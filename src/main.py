@@ -10,6 +10,7 @@ from stores.vectordb.VectorDBFactory import VectorDBFactory
 from contextlib import asynccontextmanager
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
+from utils.metrics import setup_metrics
 
 
 @asynccontextmanager
@@ -51,7 +52,7 @@ async def lifespan(app: FastAPI):
     # reranker
     reranker_provider = RerankerProviderFactory(settings=settings)
     app.reranker_client = reranker_provider.create_provider(
-        name = settings.RERANKER_BACKEND
+        name=settings.RERANKER_BACKEND
     )
 
     yield
@@ -60,6 +61,7 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(lifespan=lifespan)
+setup_metrics(app)
 
 app.include_router(base_router)
 app.include_router(data_router)
