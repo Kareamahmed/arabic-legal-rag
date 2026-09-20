@@ -67,7 +67,21 @@ services:
     command:
       - "--web.enable-lifecycle" # enable reload endpoint
 
-  
+    # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    env_file:
+      - ./env/.env.grafana
+    networks:
+      - backend
+    restart: always
+    depends_on:
+      - prometheus
 
 volumes:
   pgvector_data:
