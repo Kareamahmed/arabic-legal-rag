@@ -3,6 +3,9 @@ from stores.vectordb.providers import PGvectorProvider
 from stores.LLM.providers import CohereProvider
 from models.db_schemes.arabic_legal.schemes import DataChunk, RetrievedDocument
 from stores.LLM.LLMEnums import DocumentTypeEnums
+from collections.abc import AsyncGenerator
+import json
+from google.genai.errors import ServerError
 
 
 class NLPController(BaseController):
@@ -193,3 +196,62 @@ class NLPController(BaseController):
             prompt=full_prompt, system_prompt=system_prompt
         )
         return answer, full_prompt, contexts
+
+    async def answer_rag_question_stream(
+        self,
+        query: str,
+        vector_limit: int = 20,
+        keyword_limit: int = 20,
+        rerank_candidates: int = 10,
+        top_n: int = 5,
+    ) -> AsyncGenerator[str, None]:
+        # 1. Retrieval
+        retrieved_documents = await self.hybrid_search_vector_db(
+            text=query,
+            limit=rerank_candidates,
+            vector_limit=vector_limit,
+            keyword_limit=keyword_limit,
+        )
+        if not retrieved_documents:
+            yield f"event: error\ndata: {json.dumps({'message': 'No relevant documents found.'})}\n\n"
+            return
+
+        # 2. Rerank
+        retrieved_documents = await self.rerank_search_results(
+            query=query, documents=retrieved_documents, top_n=top_n
+        )
+        if not retrieved_documents:
+            yield f"event: error\ndata: {json.dumps({'message': 'Reranking yielded no results.'})}\n\n"
+            return
+
+        # 3. Construct Prompts
+        system_prompt = self.template_parser.get("rag", "system_prompt")
+        document_prompt = "\n".join(
+            [
+                self.template_parser.get(
+                    "rag",
+                    "document_prompt",
+                    {
+                        "doc_num": i + 1,
+                        "chunk_text": doc.chunk_text,
+                    },
+                )
+                for i, doc in enumerate(retrieved_documents)
+            ]
+        )
+        footer_prompt = self.template_parser.get(
+            "rag", "footer_prompt", {"query": query}
+        )
+        full_prompt = "\n\n".join([document_prompt, footer_prompt])
+
+        # 4. Stream response tokens
+        try:
+            async for chunk in self.generation_client.generate_text_stream(
+                prompt=full_prompt, system_prompt=system_prompt
+            ):
+                yield f"data: {json.dumps(chunk, ensure_ascii=False)}\n\n"
+        except ServerError:
+            error_payload = {
+                "message": "Model servers are currently under high load. Please try again shortly."
+            }
+            yield f"event: error\ndata: {json.dumps(error_payload)}\n\n"

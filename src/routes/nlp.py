@@ -6,6 +6,7 @@ from .schemes import PushRequest, SearchRequest
 from controller.NLPController import NLPController
 from tqdm.auto import tqdm
 import logging
+from fastapi.responses import StreamingResponse
 
 nlp_router = APIRouter(prefix="/api/v1/nlp", tags=["api_v1"])
 logger = logging.getLogger("uvicorn")
@@ -201,43 +202,6 @@ async def search_index_hybrid(request: Request, search_request: SearchRequest):
     )
 
 
-@nlp_router.post("/index/ask")
-async def ask(request: Request, search_request: SearchRequest):
-
-    nlp_controller = NLPController(
-        vector_db_client=request.app.vector_db_client,
-        generation_client=request.app.generation_client,
-        embedding_client=request.app.embedding_client,
-        template_parser=request.app.template_parser,
-        reranker_client=request.app.reranker_client,
-    )
-
-    answer, full_prompt, contexts = await nlp_controller.answer_rag_question(
-        query=search_request.text,
-        vector_limit=search_request.vector_limit,
-        keyword_limit=search_request.keyword_limit,
-        rerank_candidates=search_request.rerank_candidates,
-        top_n=search_request.top_n,
-    )
-
-    if not answer:
-        return JSONResponse(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            content={
-                "message": ResponseEnums.RAG_ANSWER_FAILED.value,
-            },
-        )
-
-    return JSONResponse(
-        content={
-            "message": ResponseEnums.RAG_ANSWER_SUCCESS.value,
-            "answer": answer,
-            "full_prompt": full_prompt,
-            "contexts": contexts,
-        },
-    )
-
-
 @nlp_router.post("/index/rerank")
 async def rerank_search_results(request: Request, search_request: SearchRequest):
 
@@ -276,3 +240,68 @@ async def rerank_search_results(request: Request, search_request: SearchRequest)
             "retrieved_chunks": [result.model_dump() for result in result],
         },
     )
+
+
+@nlp_router.post("/index/ask")
+async def ask_stream(request: Request, search_request: SearchRequest):
+    nlp_controller = NLPController(
+        vector_db_client=request.app.vector_db_client,
+        generation_client=request.app.generation_client,
+        embedding_client=request.app.embedding_client,
+        template_parser=request.app.template_parser,
+        reranker_client=request.app.reranker_client,
+    )
+
+    event_generator = nlp_controller.answer_rag_question_stream(
+        query=search_request.text,
+        vector_limit=search_request.vector_limit,
+        keyword_limit=search_request.keyword_limit,
+        rerank_candidates=search_request.rerank_candidates,
+        top_n=search_request.top_n,
+    )
+
+    return StreamingResponse(
+        event_generator,
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )
+
+# @nlp_router.post("/index/ask")
+# async def ask(request: Request, search_request: SearchRequest):
+
+#     nlp_controller = NLPController(
+#         vector_db_client=request.app.vector_db_client,
+#         generation_client=request.app.generation_client,
+#         embedding_client=request.app.embedding_client,
+#         template_parser=request.app.template_parser,
+#         reranker_client=request.app.reranker_client,
+#     )
+
+#     answer, full_prompt, contexts = await nlp_controller.answer_rag_question(
+#         query=search_request.text,
+#         vector_limit=search_request.vector_limit,
+#         keyword_limit=search_request.keyword_limit,
+#         rerank_candidates=search_request.rerank_candidates,
+#         top_n=search_request.top_n,
+#     )
+
+#     if not answer:
+#         return JSONResponse(
+#             status_code=status.HTTP_400_BAD_REQUEST,
+#             content={
+#                 "message": ResponseEnums.RAG_ANSWER_FAILED.value,
+#             },
+#         )
+
+#     return JSONResponse(
+#         content={
+#             "message": ResponseEnums.RAG_ANSWER_SUCCESS.value,
+#             "answer": answer,
+#             "full_prompt": full_prompt,
+#             "contexts": contexts,
+#         },
+#     )
