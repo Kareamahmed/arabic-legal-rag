@@ -3,6 +3,8 @@ from ..LLMEnums import GeminiEnums
 from google import genai
 from google.genai import types
 import logging
+from collections.abc import AsyncGenerator
+from google.genai.errors import ServerError
 
 
 class GeminiProvider(LLMInterface):
@@ -33,6 +35,45 @@ class GeminiProvider(LLMInterface):
         self.embedding_model_id = model_id
         self.embedding_size = embedding_size
 
+    async def generate_text_stream(
+        self,
+        prompt: str,
+        system_prompt: str = None,
+        chat_history: list = None,
+        max_output_tokens: int = None,
+        temperature: float = None,
+    ) -> AsyncGenerator[str, None]:
+        
+        if not self.generation_model_id:
+            self.logger.error("Generation model ID is not set.")
+            return
+
+        max_output_tokens = max_output_tokens or self.default_max_output_tokens
+        temperature = temperature or self.default_temperature
+
+        if chat_history:
+            contents = list(chat_history)
+            contents.append(
+                types.Content(role="user", parts=[types.Part.from_text(text=prompt)])
+            )
+        else:
+            contents = prompt
+
+        config = types.GenerateContentConfig(
+            system_instruction=system_prompt,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature,
+            top_p=0.95,
+        )
+
+        response_stream = await self.client.aio.models.generate_content_stream(
+            model=self.generation_model_id, contents=contents, config=config
+        )
+
+        async for chunk in response_stream:
+            if chunk.text:
+                yield chunk.text
+
     async def generate_text(
         self,
         prompt: str,
@@ -40,36 +81,22 @@ class GeminiProvider(LLMInterface):
         chat_history: list = None,
         max_output_tokens: int = None,
         temperature: float = None,
-    ):
-        if not chat_history:
-            chat_history = []
+    ) -> str | None:
 
-        if not self.generation_model_id:
-            self.logger.error("Generation model ID is not set.")
+        chunks = []
+        async for chunk in self.generate_text_stream(
+            prompt=prompt,
+            system_prompt=system_prompt,
+            chat_history=chat_history,
+            max_output_tokens=max_output_tokens,
+            temperature=temperature,
+        ):
+            chunks.append(chunk)
+
+        if not chunks:
             return None
 
-        max_output_tokens = max_output_tokens or self.default_max_output_tokens
-        temperature = temperature or self.default_temperature
-
-        chat_history.append(self.construct_prompt(prompt, role=GeminiEnums.USER.value))
-
-        interaction = await self.client.aio.interactions.create(
-            model=self.generation_model_id,
-            system_instruction=system_prompt,
-            input=chat_history,
-            generation_config=types.GenerationConfigDict(
-                max_output_tokens=max_output_tokens, temperature=temperature, top_p=0.95
-            ),
-        )
-
-        if not interaction or not interaction.output_text:
-            self.logger.error("Error while generating text with Gemini")
-            return None
-
-        for step in interaction.steps:
-            chat_history.append(step.model_dump())
-
-        return interaction.output_text
+        return "".join(chunks)
 
     async def embedding_text(self, text, document_type=None):
         if not self.embedding_model_id or not self.embedding_size:
